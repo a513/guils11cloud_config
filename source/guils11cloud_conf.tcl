@@ -1,0 +1,1147 @@
+#!/bin/sh
+# the next line restarts using wish \
+exec wish "$0" ${1+"$@"}
+
+switch -- $::tcl_platform(platform) {
+  "windows"        {
+    encoding system cp1251
+  }
+  "unix" - default {
+    encoding system utf-8
+  }
+}
+package require Tk
+font configure TkDefaultFont -size 10
+font configure TkFixedFont -size 10
+option add *Dialog.msg.wrapLength 6i
+option add *Dialog.dtl.wrapLength 6i
+# scrollbar: arrows removed; background changes disabled by putting an empty
+# list in ttk::style map
+ttk::style layout Horizontal.TScrollbar {
+  Horizontal.Scrollbar.trough -sticky we -children {
+    Horizontal.Scrollbar.thumb -expand 1 -sticky nswe
+  }
+}
+
+ttk::style layout Vertical.TScrollbar {
+  Vertical.Scrollbar.trough -sticky ns -children {
+    Vertical.Scrollbar.thumb -expand 1 -sticky nswe
+  }
+}
+
+ttk::style configure TScrollbar \
+-troughcolor gray78 -troughrelief flat -borderwidth 2 \
+-background gray56 -relief flat -width 6
+#    -background skyblue -relief flat -width 9
+
+ttk::style map TScrollbar -background [list \
+disabled white pressed #2a76c6  active skyblue]
+
+image create photo butborder -data {
+  iVBORw0KGgoAAAANSUhEUgAAAFQAAAAYCAYAAABk8drWAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAB3RJTUUH4woCESwgowaRhwAAAB1p
+  VFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABk0lEQVRYw+2Zr0+CURSG33uFKz8dzkGgyLQZKGx2G0IjmggmGv8GhUZyjESksVG0WdzEiWLDYSHA
+  DIqg3wXuMSjbF/38Ptp5/oRn73vPObuicfUY+VqYabs3wutMQwoB5u8YIuyFFfLpJAJ+GfXN9WraePnE7umJiQbVBATJmhwgYPSnjtev72RxPzhFrtKhbN9alYe6xXb+
+  R3moW9m+tcpVOiTf5hqk1KSaUoXSwOK+O6Q0sEQ1pQqk1ORtriHFz5spAaB2uE2syBk2Z1IIwe+l10gAIOJgumXt8FcoC3Ev1JZQnkRebE/2yguOqOuEClvlwT49MGpL
+  6GK5ZCEuWTvktWkza5NhE66nvOGEbi6hPJU8mEnECd1YQjmgHq9NfMt7fMszHlbeEIEAAwBnt2M+6x2ydkaAMUSQsZAf0tLxYnfcamYS3H2HNDMJKnbHLWnpeCzkh6h1
+  7uni+QPh4yNjlH8CIn4GnCCEkXoRn908yfODCET98iEys1bTdm+E968lfyM7xBBhJ+BDPp1EeHsr+g3JAqn15VL+ugAAAABJRU5ErkJggg==
+}
+ttk::style element create RoundedButton image {butborder} -border 3 -sticky nsew
+ttk::style layout MyBorder.TButton {
+  RoundedButton -sticky nswe -border 1 -children {
+    Button.focus -sticky nswe -children {
+      Button.padding -sticky nswe -children {
+        Button.label -sticky nswe
+    	    }
+        }
+    }
+}
+ttk::style layout My.TButton {
+        RoundedButton -sticky nswe -border 1 -children {
+          Button.focus -sticky nswe -children {
+            Button.padding -sticky nswe -children {
+              Button.label -sticky nswe
+            }
+        }
+    }
+}
+
+wm geometry . +300+105
+wm title . "GUI LS11CloudConf"
+global userpin
+set userpin 0
+global p11conf
+
+global ls11cloud_config
+global libpkcs11
+global TopPw
+global labTok
+global tekSlot
+global formatCert
+global myDir
+global pasfromconf
+set pasfromconf ""
+set formatCert "1"
+global myHOME
+set myHOME $env(HOME)
+puts "myHOME"
+set labTok ""
+set tekSlot ""
+set res ""
+set libpkcs11 ""
+set p11conf ""
+global logo
+ttk::style map TButton -background [list disabled #d9d9d9 pressed #a3a3a3  active #93cee9] -foreground [list disabled #a3a3a3] -relief [list {pressed !disabled} sunken]
+ttk::style configure TButton -borderwidth 2 -anchor s -padx 0 -bg #d9d9d9
+# wheat
+ttk::style configure Fn.TButton -borderwidth 2 -anchor w -padx 0 -background #d9d9d9
+ttk::style configure My.TButton -borderwidth 2 -anchor s -padx 0 -background #eff0f1
+# wheat
+####################
+global typesys
+set typesys $::tcl_platform(platform)
+global home
+switch -- $::tcl_platform(platform) {
+  "windows"        { set home $::env(USERPROFILE) }
+  "unix" - default { set home $::env(HOME) }
+}
+
+set pathtok [file join $home "ls11cloud"]
+set fileconf [file join $pathtok "config.txt"]
+set pathutil [file join $pathtok "UTIL"]
+set myDir "/home/a513/ORLOV/TK_Tcl/Project/FREEWRAP/GUICLOUDCONFIG/BINARY"
+##################
+set typesys [tk windowingsystem]
+switch $typesys {
+  win32        {
+    set home $::env(USERPROFILE)
+    set lprng_init_auto  "lprng_init_auto.exe"
+    set ls11cloud_config "ls11cloud_config.exe"
+    set libls11cloud  "ls11cloud.dll"
+    set p11conf "p11conf.exe"
+    set myfont [font configure TkDefaultFont]
+    set myfont [lreplace $myfont 5 5 bold]
+    set com "font create TkDefaultFontBold $myfont"
+    set com [subst $com]
+    eval $com
+  }
+  x11 {
+    set home $::env(HOME)
+    catch {tk_getOpenFile foo bar}
+    set ::tk::dialog::file::showHiddenVar 0
+    set ::tk::dialog::file::showHiddenBtn 1
+    set lprng_init_auto  "lprng_init_auto"
+    set ls11cloud_config "ls11cloud_config"
+    set libls11cloud  "libls11cloud.so"
+    set p11conf "p11conf"
+    set myfont [font configure TkDefaultFont]
+    set myfont [lreplace $myfont 5 5 bold]
+    set com "font create TkDefaultFontBold $myfont"
+    set com [subst $com]
+    eval $com
+  }
+  classic - aqua {
+    set home $::env(HOME)
+    set lprng_init_auto  "lprng_init_auto"
+    set ls11cloud_config "ls11cloud_config"
+    set libls11cloud  "libls11cloud.dylib"
+    set p11conf "p11conf"
+  }
+}
+##################
+
+if {[file exists $pathutil]} {
+  file delete -force  $pathutil
+}
+if {[file exists [file join $pathtok $libls11cloud]]} {
+  file delete -force  [file join $pathtok $libls11cloud]
+}
+file mkdir $pathutil
+::freewrap::unpack [file join $myDir $lprng_init_auto] $pathutil
+::freewrap::unpack [file join $myDir $ls11cloud_config] $pathutil
+::freewrap::unpack [file join $myDir  $libls11cloud] $pathtok
+::freewrap::unpack [file join $myDir  $p11conf] $pathutil
+set lprng_init_auto [file join $pathutil $lprng_init_auto]
+set ls11cloud_config [file join $pathutil $ls11cloud_config]
+set p11conf [file join $pathutil $p11conf]
+set libls11cloud [file join $pathtok $libls11cloud]
+
+set libpkcs11 $libls11cloud
+if {$typesys != "win32" } {
+  file attribute $lprng_init_auto -permissions +x	
+  file attribute $ls11cloud_config -permissions +x
+  file attribute $p11conf -permissions +x	
+}
+
+proc setTempDir {} {
+  switch -- $::tcl_platform(platform) {
+    "windows"        { set tempDir $::env(TEMP) }
+    "unix" - default { set tempDir "/tmp" }
+  }
+  return $tempDir
+}
+
+proc statTok {} {
+  global p11conf
+  global libls11cloud
+  global ls11cloud_config
+  global yespas
+  #Ввод пароля для SESPAKE
+  global pass
+  set pass ""
+
+  #Ввод пароля
+  wm title .topPinPw "Пароль для доступа к облаку"
+  .topPinPw.labFrPw configure -text "Введите пароль и нажмите Enter"
+  wm state .topPinPw normal
+  wm state .topPinPw withdraw
+  wm state .topPinPw normal
+  raise .topPinPw .
+  grab .topPinPw
+  focus .topPinPw.labFrPw.entryPw
+  set yespas ""
+  vwait yespas
+  grab release .topPinPw
+  #Ввод пароля
+  if { $yespas == "no" } {
+    return 0
+  }
+  set yesno "no"
+
+  set err [catch {exec $ls11cloud_config status -p $pass} result]
+
+  if {$err} {
+    return -3
+  }
+  set cm [string first "Can't open config file" $result]
+  if { $cm != -1} {
+    tk_messageBox -title "Инициализация токена" \
+    -icon error -message "Нет токена в облаке.\nНеобходимо перерегистрироваться" -detail $result
+    return -2
+  }
+  set cm [string first "CKF_USER_PIN_INITIALIZED" $result]
+  if { $cm == -1} {
+    return -1
+  }
+  return 1
+}
+
+image create photo cloud_100x50 -data {
+  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
+}
+
+image create photo logoCloud_150x96 -data {
+  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
+}
+
+image create photo logoLC -file [file join $myDir "logo_cloud.png"]
+
+image create photo cloud_32x32 -data {
+  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
+}
+image create photo exitCA_16x16 -data {
+  R0lGODlhEAAQAMYAAP///5gBAfz398+Hh6AVFdJSUsMAANMAAMYAANJRUdNVVcgA
+  ANAAANQAANRYWNFOTtBCQtBISNBEROmjo9A/P9VcXOq5ueuysuyKiuq4uOqwsJwH
+  B9E8POmpqe/Bwe6jo/jk5NxyctdiYs4aGuSFhfvw8NcaGuyFhdaamthqavHJycMJ
+  CeOJiccXF8kfH841Nfba2twaGtEuLtkpKeqYmPCUlLYYGONaWuJsbNciIt1KSt5C
+  Qvne3uFhYd57e8sqKrk2Nv//////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////
+  /////////////////yH+EUNyZWF0ZWQgd2l0aCBHSU1QACwAAAAAEAAQAAAHgIAA
+  goOEhYaHhiUEi4yNAYQDFRUOlBoKBQUJHZAOCpcFAAkPo5uDA5kiAA8AAgAREaWC
+  A6MAKREAEoIQE5ARKrgSEBAUABy8phCCFCsGzQAGJJAUHM8GCNcAC9Gm2NkLCwAq
+  DCeQ3wyEHgwH5KYM7uoHDfIN7IMC9/j5rYj8/YaBADs=
+}
+image create photo logoTok -data {
+  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
+}
+wm iconphoto . cloud_32x32
+. configure  -borderwidth 1 -background #c0bab4 -padx 2 -pady 2
+update
+
+frame .st -relief groove -bd 3 -background #eff0f1  -padx 5 -pady 0
+pack .st -in . -fill both -side top -expand 1 -pady 0
+
+frame .fr1 -borderwidth 1 -relief flat -background #ffffff -highlightbackground #93cee9 -padx 0 -pady 0 -highlightthickness 1 -highlightcolor #93cee9
+
+labelframe .fr1.fra82 -text "Функционал" -borderwidth 3 -relief flat -padx 5 -pady 5 -bg #ffffff -font TkDefaultFontBold -highlightthickness 1 -highlightbackground #93cee9  -highlightcolor #93cee9
+pack .fr1.fra82 -in .fr1 -anchor center -expand 1 -fill both -padx 2 -side left
+
+set list_but {{reqToCloud . .fr1.fr2_list "register";} "1. Регистрация в облаке" {reqToCloud . .fr1.fr2_list "change_pswd";} "2. Изменить пароль" \
+{reqToCloud .topPinPw .fr1.fr2_list "duplicate"} "3. Дублировать токен" {cloudStatus . .fr1.fr2_list "status"} "4. Статус" \
+{cloudStatus . .fr1.fr2_list "log"} "5. Посмотреть журнал" {cloudStatus . .fr1.fr2_list "recreate"} "6. Пересоздать токен" \
+{cloudStatus . .fr1.fr2_list "unregister"} "7. Удалить регистрацию"  }
+set i 1
+
+option add *Button.highlightthickness  4    interactive
+option add *Button.highlightbackground #39b5da interactive
+foreach {a b} $list_but {
+  #puts "$a $b"
+  set pady  0
+  if { [expr $i % 2] } {
+    set pady  3
+  }
+  button .fr1.fra82.b$i -command "$a" -relief flat -highlightthickness 1 -text "$b" -anchor w -highlightcolor #18f1d7 -activebackground #ffffff -bg #d9d9d9 -fg #000000 -padx 2
+
+  switch [tk windowingsystem] {
+    win32        {
+      .fr1.fra82.b$i configure -highlightbackground #39b5da -highlightthickness  1
+    }
+    x11 {
+      .fr1.fra82.b$i configure -highlightbackground #39b5da -highlightthickness  1
+    }
+    classic - aqua {
+      .fr1.fra82.b$i configure -highlightbackground #ffffff -highlightthickness  0
+    }
+  }
+
+  pack .fr1.fra82.b$i -expand 1 -fill x -side top  -pady $pady -anchor center
+  incr i
+}
+#########################
+
+label .fr1.fra82.cloud  -text "Logo регистрацию" -image logoCloud_150x96 -bg #ffffff
+pack .fr1.fra82.cloud -expand 1 -anchor center -fill x -side top  -pady {0 3}
+ttk::button .fr1.fra82.b5_10 -text "  Завершаем  "  -image exitCA_16x16 -compound left -command {file delete -force  $pathutil;exit} -style My.TButton
+pack .fr1.fra82.b5_10 -expand 1 -in .fr1.fra82 -anchor center -fill none -side top  -pady {5 0}
+text .fr1.fr2_list  -bg #ffffff -wrap none -xscrollcommand {.fr1.scx set} -yscrollcommand {.fr1.ysc set}  -highlightcolor #93cee9 -relief flat -highlightthickness 1 -highlightbackground #93cee9
+
+.fr1.fr2_list tag configure color2 -foreground blue -font "helvetica 12 bold roman"
+ttk::scrollbar .fr1.ysc -command ".fr1.fr2_list yview" -orient vertical
+ttk::scrollbar .fr1.scx -command ".fr1.fr2_list xview" -orient horizontal
+
+pack .fr1.ysc -in .fr1 -anchor center -expand 0 -fill y -side right  -padx {0 2} -pady {0 11}
+pack .fr1.scx -in .fr1 -anchor center -expand 0 -fill x -side bottom  -padx {0 0}
+
+label .fr1.labLogo -image logoLC -compound center  -text "ПОДОЖДИТЕ" -fg blue -bg #ffffff
+pack .fr1.labLogo -in .fr1 -anchor center -expand 0 -fill none -side top -pady 5
+#########
+
+label .labMain -bg #eff0f1 -font {Times 18 {bold }} -foreground black -text " Регистрация токена PKCS#11 в облаке LS11Cloud" -image cloud_100x50 -compound left
+pack  .labMain -in .st  -side top -pady 5
+pack .fr1 -in .st -side top -fill both -expand 1 -pady 5
+
+set fconf [file exists "$fileconf"]
+if { $fconf == "0" } {
+  .fr1.fra82.b2 configure -state "disabled"
+  .fr1.fra82.b4 configure -state "disabled"
+  .fr1.fra82.b5 configure -state "disabled"
+  .fr1.fra82.b6 configure -state "disabled"
+  .fr1.fra82.b7 configure -state "disabled"
+  tk_messageBox -title "Статус пользователя в облаке" -icon error -message "Вы не зарегистрированы в облаке PKCS#11" -detail "Необходимо зарегистрироваться в облаке\nи создать облачный токен,\nлибо продублировать существующий токен"
+  pack forget .fr1.labLogo
+  pack .fr1.fr2_list -in .fr1 -anchor center -expand 0 -fill none -side top -pady 0
+} else {
+  set er 0
+  update
+  set err [catch {exec $p11conf -A $libls11cloud -it} result]
+  .fr1.fr2_list delete 1.0 end
+  .fr1.fr2_list insert end $result
+  if {$err} {
+    tk_messageBox -title "Регистрация пользователя в облаке" -icon info \
+    -message "Ошибка доступа к облаку\nПроверьте доступность облака"
+  } else {
+    set cm [string first "Token not licensed" $result]
+    if { $cm != -1} {
+      set er -2
+    }
+    set cm [string first "CKF_USER_PIN_INITIALIZED" $result]
+    if { $cm == -1} {
+      tk_messageBox -title "Регистрация пользователя в облаке" -icon info \
+      -message "Вы зарегистрированы в облаке\nНо требуется инициализация вашего облачного токена"
+      set er -1
+      set userpin -1
+    }
+    if {$er == 0} {
+      tk_messageBox -title "Статус пользователя в облаке" -icon info -message "Вы зарегистрированы в облаке PKCS#11" -detail "Облачный токен готов к использованию"
+    }
+  }
+  pack forget .fr1.labLogo
+  pack .fr1.fr2_list -anchor center -expand 0 -fill y -side top -ipady 5
+}
+
+#Окно для ввода пароля/PIN-кода
+toplevel .topPinPw -borderwidth 2 -class Toplevel -relief groove -height 100 -width 360 -background #39b5da  -highlightcolor black -highlightbackground #d9d9d9
+global cloud_32x32
+wm geometry .topPinPw +383+258
+raise .topPinPw .
+wm iconphoto .topPinPw cloud_32x32
+wm state .topPinPw withdraw
+labelframe .topPinPw.labFrPw -borderwidth 4 -class LabelFrame -labelanchor nw -relief groove -text "Введите PIN-код и нажмите Enter" -foreground blue -background #eff0f1 -padx 3 -pady 3
+pack .topPinPw.labFrPw -anchor nw -padx 3 -pady 3 -fill both -expand 1
+entry .topPinPw.labFrPw.entryPw -background snow -disabledbackground #d9d9d9 -disabledforeground #a3a3a3 -highlightbackground #d9d9d9 -highlightcolor black -insertbackground black -insertofftime 300 -insertontime 600 -justify left -relief sunken -selectbackground #c4c4c4 -selectforeground black -show * -state normal -validate none -width 40
+pack .topPinPw.labFrPw.entryPw -fill x -expand 1 -padx 5 -pady 2
+bind .topPinPw.labFrPw.entryPw <Key-Return> {puts "KeyPW";
+readPw .topPinPw.labFrPw.entryPw}
+ttk::button .topPinPw.labFrPw.butPw  -command {global yespas;set yespas "no";
+wm state .topPinPw withdraw;} -text "Отмена"  -style My.TButton
+pack .topPinPw.labFrPw.butPw -pady 5 -sid right -padx 5
+
+#Окно регистрации в облаке
+toplevel .createTok -background wheat -padx 5 -pady 5
+wm geometry .createTok +383+258
+wm iconphoto .createTok cloud_32x32
+wm state .createTok withdraw
+labelframe .createTok.url -relief groove -bd 3 -fg blue  -text "Адрес облака" -padx 5 -pady 3 -font "helvetica 10 bold italic" -bg #eff0f1
+pack .createTok.url -side top -fill x -expand 1
+label .createTok.url.labTok -bg wheat -justify left -text "Хост облака"  -anchor w
+entry .createTok.url.entTok -background snow -width 38
+grid .createTok.url.labTok .createTok.url.entTok -padx 2 -sticky news
+label .createTok.url.labPort -text "Порт в облаке" -anchor w -bg wheat
+entry .createTok.url.entPort -background snow
+grid .createTok.url.labPort .createTok.url.entPort  -padx 2 -pady 2 -sticky news
+labelframe .createTok.aut -relief groove -bd 3 -fg blue  -text "Авторизация в облаке" -padx 5 -pady 3 -font "helvetica 10 bold italic" -bg #eff0f1
+pack .createTok.aut -side top -fill x -expand 1 -pady 5
+label .createTok.aut.labLogin -background wheat -text "Логин пользователя" -anchor w
+entry .createTok.aut.entLogin -background snow  -width 25
+grid .createTok.aut.labLogin .createTok.aut.entLogin  -padx 2 -pady 2 -sticky news
+label .createTok.aut.labUserPin  -bg wheat -text "Новый PIN-пользователя" -anchor w
+entry .createTok.aut.entUserPin -background snow -show *
+grid .createTok.aut.labUserPin .createTok.aut.entUserPin  -padx 2 -pady 2 -sticky news
+label .createTok.aut.labRepUserPin  -bg wheat -text "Повторите PIN-пользователя " -anchor w
+entry .createTok.aut.entRepUserPin -background snow -show *
+grid .createTok.aut.labRepUserPin .createTok.aut.entRepUserPin  -padx 2 -pady 2 -sticky news
+#####################
+grid remove .createTok.aut.labRepUserPin
+grid remove .createTok.aut.entRepUserPin
+
+ttk::button .createTok.createOk  -command {global yespas;set yespas "yes";
+wm state .createTok withdraw;} -text Готово -style My.TButton
+pack .createTok.createOk -side left -pady 2
+ttk::button .createTok.createCansel -command {global yespas;set yespas "no";
+wm state .createTok withdraw;} -text Отмена -style My.TButton
+pack .createTok.createCansel -side right -pady 2
+focus .createTok.aut.entLogin
+
+proc readPw ent {
+  global widget
+  global yespas
+  global pass
+  puts "readPWD"
+  set pass [$ent get]
+  puts $pass
+  $ent delete 0 end
+  set yespas "yes"
+  wm state .topPinPw withdraw
+}
+
+proc reqToCloud {w list type} {
+  global pathtok
+  global lprng_init_auto
+  global ls11cloud_config
+  global home
+  global yespas
+  set host ""
+  set port ""
+  set id ""
+  set dircloud [file join "$home" "ls11cloud"]
+  set fileconf [file join "$dircloud" "config.txt"]
+  set fconf [file exists "$fileconf"]
+  if { $fconf != "0" } {
+    set stcl [statTok]
+    if { $stcl == 0 } {
+      return
+    }
+    if { $stcl == -1 } {
+      tk_messageBox -title "Регистрация пользователя в облаке" -icon info \
+      -message "Вы зарегистрированы в облаке\nНо требуется инициализация облачного токена"
+      initp11
+      return
+    } else {
+      if {$type != "change_pswd"} {
+        tk_messageBox -title "Регистрация пользователя в облаке" -icon info -message "У вас есть облачный токен PKCS#11\nОблачный токен готов к использованию\n"
+        return
+      }
+    }
+  }
+  if {$type == "change_pswd"} {
+    set fp [open "$fileconf" r]
+    while {![eof $fp]} {
+      gets $fp res
+      if { "host = \"" == [string range $res 0 7]} {
+        set h [string range $res 8 end]
+        set ptr [string first "\"" $h]
+        set host [string range $h 0 $ptr-1]
+      } elseif { "port = \"" == [string range $res 0 7]} {
+        set h [string range $res 8 end]
+        set ptr [string first "\"" $h]
+        set port [string range $h 0 $ptr-1]
+      } elseif { "id = \"" == [string range $res 0 5]} {
+        set h [string range $res 6 end]
+        set ptr [string first "\"" $h]
+        set id [string range $h 0 $ptr-1]
+      }
+    }
+  }
+
+  set typemes ""
+  if {$type == "register"} {
+    set typemes "Регистрация пользователя в облаке"
+    grid .createTok.aut.labRepUserPin
+    grid .createTok.aut.entRepUserPin
+    .createTok.aut.entRepUserPin delete 0 end
+    .createTok.aut.labRepUserPin configure -text "Повторите пароль пользователя "
+  } elseif {$type == "duplicate"} {
+    set typemes "Дубликат регистрации в облаке"
+    grid remove .createTok.aut.labRepUserPin
+    grid remove .createTok.aut.entRepUserPin
+  } elseif {$type == "change_pswd"} {
+    set typemes "Изменение пароля доступа к облаку"
+    grid .createTok.aut.labRepUserPin
+    grid .createTok.aut.entRepUserPin
+    .createTok.aut.entRepUserPin delete 0 end
+    .createTok.aut.labRepUserPin configure -text "Новый пароль пользователя "
+    .createTok.url.entTok delete 0 end
+    .createTok.url.entTok insert end $host
+    .createTok.url.entPort delete 0 end
+    .createTok.url.entPort insert end $port
+    .createTok.url.entTok configure -state disabled
+    .createTok.url.entPort configure -state disabled
+    .createTok.aut.entLogin delete 0 end
+    .createTok.aut.entLogin insert end $id
+    .createTok.aut.entLogin configure -state disabled
+  } else {
+    tk_messageBox -title "Регистрация пользователя в облаке" -icon error -message "Неизвестная команда\n$type"
+    return
+  }
+  wm title .createTok $typemes
+  .createTok.aut configure  -text "Авторизация в облаке"
+  .createTok.aut.labLogin configure -text "Логин пользователя"
+  .createTok.aut.labUserPin configure -text "Введите пароль пользователя"
+  .createTok.aut.entUserPin delete 0 end
+  if {$type == "duplicate" || $type == "register"} {
+    .createTok.url.entTok configure -state normal
+    .createTok.url.entPort configure -state normal
+    .createTok.url.entTok delete 0 end
+    .createTok.url.entTok insert end "lissi.ru"
+    .createTok.url.entPort delete 0 end
+    .createTok.url.entPort insert end "4444"
+    .createTok.aut.entLogin configure -state normal
+    .createTok.aut.entLogin delete 0 end
+  }
+
+  wm state .createTok normal
+  wm state .createTok withdraw
+  while {1} {
+    wm state .createTok normal
+    grab .createTok
+    focus .createTok.aut.entLogin
+
+    set yespas ""
+    vwait yespas
+    grab release .createTok
+    #Ввод пароля
+    if { $yespas == "no" } {
+      return 0
+    }
+    set host [.createTok.url.entTok get]
+    set port [.createTok.url.entPort get]
+    set nick [.createTok.aut.entLogin get]
+    set pas1 [.createTok.aut.entUserPin get]
+    if {$type == "register" || $type == "change_pswd"} {
+      set pas2 [.createTok.aut.entRepUserPin get]
+    }
+    set len [string length $nick]
+    set lenpas [string length $pas1]
+    if {$type == "register" || $type == "change_pswd"} {
+      if { $host == "" || $port == "" || $nick == "" || $pas1 == "" || $pas2 == "" } {
+        tk_messageBox -title "$typemes" -icon error -message "Не все поля заполнены\n"
+        continue
+      }
+      if { $type == "register" && $pas1 != $pas2} {
+        tk_messageBox -title "$typemes" -icon error -message "Разные пароли\n"
+        continue
+      }
+    } else {
+      if { $host == "" || $port == "" || $nick == "" || $pas1 == ""} {
+        tk_messageBox -title "$typemes" -icon error -message "Не все поля заполнены\n"
+        continue
+      }
+    }
+    if { $len < 6} {
+      tk_messageBox -title "$typemes" -icon error -message "Логин должен иметь неменее 6 символов\n"
+      continue
+    }
+    if { $lenpas < 6} {
+      tk_messageBox -title "$typemes" -icon error -message "Пароль должен иметь неменее 6 символов\n"
+      continue
+    }
+    break;
+  }
+  set yesno "no"
+  set fprng [file join $pathtok "prng_start.bin"]
+
+  if {$type == "change_pswd"} {
+    set cmd "$ls11cloud_config $type \-p $pas1 \-n $pas2"
+  } else {
+    set res [exec $lprng_init_auto $fprng]
+    set cmd "$ls11cloud_config $type $host $port $nick \-p $pas1"
+  }
+  if {[catch {eval exec "$cmd" } res]} {
+    tk_messageBox -title "$typemes" -icon error -message "Ошибка доступа к облаку" -detail "$res"
+    return
+  }
+  set yesno  [tk_messageBox  -icon question  -type yesno  -title "$typemes"  \
+  -message "$typemes\nОперация прошла успешно.\nХотите сохранить пароль?" -detail "$res"]
+
+  if {$yesno == "yes"} {
+    if {$type == "change_pswd"} {
+      set pas1 $pas2
+    }
+
+    set cmd "$ls11cloud_config save_pswd_hash \-p \"$pas1\""
+    if {[catch {eval exec "$cmd" } res]} {
+      tk_messageBox -title "$typemes" -icon error -message "Ошибка доступа к облаку" -detail "$res"
+      return
+    }
+    tk_messageBox -title "$typemes" -icon info \
+    -message "Пароль сохранен"
+
+  }
+  if {$type == "register"} {
+    tk_messageBox -title "$typemes" -icon info \
+    -message "Вы зарегистрированы в токене\nСледующий шаг будет инициализация облачного токена"
+    initp11
+  } else {
+    tk_messageBox -title "$typemes" -icon info \
+    -message "Вы получили доступ к облаку\nПроверьте статус облачного токена"
+  }
+  .fr1.fra82.b2 configure -state "normal"
+  .fr1.fra82.b4 configure -state "normal"
+  .fr1.fra82.b5 configure -state "normal"
+  .fr1.fra82.b6 configure -state "normal"
+  .fr1.fra82.b7 configure -state "normal"
+  #Начальное значение ДСЧ
+}
+
+proc initp11 {} {
+  global p11conf
+  global libpkcs11
+  global yesno
+  global yespas
+  global home
+  set dircloud [file join "$home" "ls11cloud"]
+  set fileconf [file join "$dircloud" "config.txt"]
+  set fp [open "$fileconf" r]
+  set host ""
+  set port ""
+  set id ""
+  while {![eof $fp]} {
+    gets $fp res
+    if { "host = \"" == [string range $res 0 7]} {
+      set h [string range $res 8 end]
+      set ptr [string first "\"" $h]
+      set host [string range $h 0 $ptr-1]
+    } elseif { "port = \"" == [string range $res 0 7]} {
+      set h [string range $res 8 end]
+      set ptr [string first "\"" $h]
+      set port [string range $h 0 $ptr-1]
+    } elseif { "id = \"" == [string range $res 0 5]} {
+      set h [string range $res 6 end]
+      set ptr [string first "\"" $h]
+      set id [string range $h 0 $ptr-1]
+    }
+  }
+  grid .createTok.aut.labRepUserPin
+  grid .createTok.aut.entRepUserPin
+  .createTok.aut.entLogin delete 0 end
+  .createTok.url.entTok delete 0 end
+  .createTok.url.entPort delete 0 end
+  .createTok.url.entTok insert end $host
+  .createTok.url.entPort insert end $port
+  .createTok.url.entTok configure -state disabled
+  .createTok.url.entPort configure -state disabled
+  .createTok.aut configure  -text "Инициализация облачного токена"
+  .createTok.aut.labLogin configure -text "Метка облачного токена"
+  .createTok.aut.labUserPin configure -text "Введите PIN-код для токена"
+  .createTok.aut.labRepUserPin configure -text "Повторите PIN-код токена"
+  .createTok.aut.entLogin insert end $id
+  .createTok.aut.entUserPin delete 0 end
+  .createTok.aut.entRepUserPin delete 0 end
+  set typemes "Первичная инициализация токена"
+  wm title .createTok $typemes
+  wm state .createTok normal
+  wm state .createTok withdraw
+  while {1} {
+    wm state .createTok normal
+    grab .createTok
+    focus .createTok.aut.entLogin
+    set yespas ""
+    vwait yespas
+    grab release .createTok
+    #Ввод пароля
+    if { $yespas == "no" } {
+      return 0
+    }
+    set nicktok [.createTok.aut.entLogin get]
+    set pas1 [.createTok.aut.entUserPin get]
+    set pas2 [.createTok.aut.entRepUserPin get]
+    set lenpas [string length $pas1]
+    if { $nicktok == "" || $pas1 == "" || $pas2 == "" } {
+      tk_messageBox -title "$typemes" -icon error -message "Не все поля заполнены\n"
+      continue
+    }
+    if {$pas1 != $pas2} {
+      tk_messageBox -title "$typemes" -icon error -message "Разные PIN-коды\n"
+      continue
+    }
+    if { $lenpas < 6} {
+      tk_messageBox -title "$typemes" -icon error -message "PIN-код должен иметь неменее 6 символов\n"
+      continue
+    }
+    break;
+  }
+  #Initialize plus label Token
+  set sopin "87654321"
+  set cmd "\"$p11conf\" -A \"$libpkcs11\"   -I -c 0 -S \"$sopin\" -L \"$nicktok\""
+  if {[catch {eval exec "$cmd" } res]} {
+    tk_messageBox -title "$typemes" -icon error -message "Ошибка инициализации токена" -detail "$res"
+    return
+  }
+  #Initialize USER pin
+  set cmd "\"$p11conf\" -A \"$libpkcs11\"  -u -c 0 -S \"$sopin\" -n 11111111"
+  if {[catch {eval exec "$cmd" } res]} {
+    tk_messageBox -title "$typemes" -icon error -message "Ошибка инициализации PIN-кода" -detail "$res"
+    return
+  }
+  #Ustanavlivaem USER PIN
+  set cmd "\"$p11conf\" -A \"$libpkcs11\"  -p -c 0 -U 11111111  -n \"$pas1\""
+  if {[catch {eval exec "$cmd" } res]} {
+    tk_messageBox -title "$typemes" -icon error -message "Ошибка установки PIN-кода" -detail "$res"
+    return
+  }
+  tk_messageBox -title "$typemes" -icon info -message "PIN-код пользователя с \nлогином $id для токена\n$nicktok установлен.\nОблачный токен готов к использованию\n" \
+  -detail "$res\nНикому не передавайте PIN от вашего токена.\n \
+  Для смены PIN-кодов используйте утилиты P11CONF/GUIP11CONF\nССЫЛКА на habr"
+  return
+
+}
+
+proc cloudStatus {w list type} {
+  global ls11cloud_config
+  global p11conf
+  global pass
+  global yespas
+  global yesno
+  global home
+  set dircloud [file join "$home" "ls11cloud"]
+  set fileconf [file join "$dircloud" "config.txt"]
+  set fconf [file exists "$fileconf"]
+  if { $fconf == "0" } {
+    tk_messageBox -title "Статус пользователя в облаке" -icon error -message "Вы не зарегистрированы в облаке PKCS#11\nВыполните регистрацию"
+    return
+  }
+
+  set stcl [statTok]
+  if { $stcl == 0 } {
+    return
+  }
+  if { $stcl == -1 } {
+    if {[string compare $type "unregister"] != 0} {
+      tk_messageBox -title "Регистрация пользователя в облаке" -icon info \
+      -message "Вы зарегистрированы в токене\nНо требуется инициализация облачного токена"
+      return
+    }
+  }
+
+  if {[string compare $type "recreate"] == 0} {
+    set yesno  [tk_messageBox  -icon question  -type yesno  -title Message  -parent .  -message "Вы действительно хотите перерегистрироваться?\nИмейте ввиду - токен будет уничтожен!"]
+    if {$yesno == "no"} {
+      return
+    }
+  } elseif {[string compare $type "unregister"] == 0} {
+    set yesno  [tk_messageBox  -icon question  -type yesno  -title Message  -parent .  -message "Вы действительно хотите уйти из облака?\nИмейте ввиду - токен будет уничтожен!"]
+    if {$yesno == "no"} {
+      return
+    }
+  }
+
+  set command "\"$ls11cloud_config\"  $type -p \"$pass\""
+  puts "$command\n"
+  set tube [ open |$command r+]
+  fconfigure $tube -buffering line
+  $list  delete 1.0 end;
+
+  while {![eof $tube]} {
+    gets $tube res
+    $list insert end "$res\n"
+  }
+  if {[catch {close $tube} result]} {
+    tk_messageBox -title "Статус пользователя в облаке" -icon error -message "Ошибка доступа к облаку" -detail "$result"
+    return
+  }
+  if {[string compare $type "unregister"] == 0} {
+    $list insert end "Ваш облачный токен удален\n" color2
+    $list insert end "Ваша регистрация в облаке PKCS#11 удалена\n" color2
+    .fr1.fra82.b2 configure -state "disabled"
+    .fr1.fra82.b4 configure -state "disabled"
+    .fr1.fra82.b5 configure -state "disabled"
+    .fr1.fra82.b6 configure -state "disabled"
+    .fr1.fra82.b7 configure -state "disabled"
+
+  } elseif {[string compare $type "recreate"] == 0} {
+    $list insert end "Вы успешно прошли перерегистрацию в облаке.\n"  color2
+    $list insert end "Ваш прежний токен уничтожен.\n" color2
+    $list insert end "Создайте и проиницилизируйте \n" color2
+    $list insert end "новый токен в облаке,\n" color2
+    $list insert end "воспользовавшись утилитой p11conf или guip11conf.\n" color2
+  }
+}
+#Инициализация токена через P11CONF
+if { $userpin == -1 } {
+  initp11
+}
+wm resizable . 0 0
+
