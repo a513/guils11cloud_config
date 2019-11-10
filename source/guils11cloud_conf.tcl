@@ -15,27 +15,27 @@ font configure TkDefaultFont -size 10
 font configure TkFixedFont -size 10
 option add *Dialog.msg.wrapLength 6i
 option add *Dialog.dtl.wrapLength 6i
-# scrollbar: arrows removed; background changes disabled by putting an empty
-# list in ttk::style map
-ttk::style layout Horizontal.TScrollbar {
-  Horizontal.Scrollbar.trough -sticky we -children {
-    Horizontal.Scrollbar.thumb -expand 1 -sticky nswe
-  }
-}
 
-ttk::style layout Vertical.TScrollbar {
-  Vertical.Scrollbar.trough -sticky ns -children {
-    Vertical.Scrollbar.thumb -expand 1 -sticky nswe
-  }
-}
+if {[tk windowingsystem] == "x11"} {
+    # scrollbar: arrows removed; background changes disabled by putting an empty	
+    # list in ttk::style map
+    ttk::style layout Horizontal.TScrollbar {
+	Horizontal.Scrollbar.trough -sticky we -children {
+	    Horizontal.Scrollbar.thumb -expand 1 -sticky nswe
+	}
+    }
 
-ttk::style configure TScrollbar \
--troughcolor gray78 -troughrelief flat -borderwidth 2 \
--background gray56 -relief flat -width 6
+    ttk::style layout Vertical.TScrollbar {
+	Vertical.Scrollbar.trough -sticky ns -children {
+	    Vertical.Scrollbar.thumb -expand 1 -sticky nswe
+	}
+    }
+
+    ttk::style configure TScrollbar -troughcolor gray78 -troughrelief flat -borderwidth 2 -background gray56 -relief flat -width 6
 #    -background skyblue -relief flat -width 9
 
-ttk::style map TScrollbar -background [list \
-disabled white pressed #2a76c6  active skyblue]
+    ttk::style map TScrollbar -background [list disabled white pressed #2a76c6  active skyblue]
+}
 
 image create photo butborder -data {
   iVBORw0KGgoAAAANSUhEUgAAAFQAAAAYCAYAAABk8drWAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAB3RJTUUH4woCESwgowaRhwAAAB1p
@@ -607,6 +607,13 @@ image create photo logoTok -data {
   9eehWOazj53mYx/7HDbYpEtEvGsLecZ5N64lM50O3bKk0wnMzc3inePQygr3v+3NnDi+SsppCmi+hNh8ebtw2x0iOmqdW6RtuRm5akadTNQjWKvbbToWN5VRJh1M8/q0
   zlymZMM23lEy0rPopGC3rb+Kjmc3r8SH0yjgsjbURFPRJjvB9vlZdomvdbxdQ2hnOy/jY0Dktc9c/OP19f8BIQVAFWY2srAAAAAASUVORK5CYII=
 }
+set ::pbut .fr1.fra82.b1
+proc presbut {i} {
+    .fr1.fra82.b$i configure -bg skyblue
+    $::pbut configure -bg #d9d9d9
+    set ::pbut .fr1.fra82.b$i
+}
+
 wm iconphoto . cloud_32x32
 . configure  -borderwidth 1 -background #c0bab4 -padx 2 -pady 2
 update
@@ -619,10 +626,10 @@ frame .fr1 -borderwidth 1 -relief flat -background #ffffff -highlightbackground 
 labelframe .fr1.fra82 -text "Функционал" -borderwidth 3 -relief flat -padx 5 -pady 5 -bg #ffffff -font TkDefaultFontBold -highlightthickness 1 -highlightbackground #93cee9  -highlightcolor #93cee9
 pack .fr1.fra82 -in .fr1 -anchor center -expand 1 -fill both -padx 2 -side left
 
-set list_but {{reqToCloud . .fr1.fr2_list "register";} "1. Регистрация в облаке" {reqToCloud . .fr1.fr2_list "change_pswd";} "2. Изменить пароль" \
-{reqToCloud .topPinPw .fr1.fr2_list "duplicate"} "3. Дублировать токен" {cloudStatus . .fr1.fr2_list "status"} "4. Статус" \
-{cloudStatus . .fr1.fr2_list "log"} "5. Посмотреть журнал" {cloudStatus . .fr1.fr2_list "recreate"} "6. Пересоздать токен" \
-{cloudStatus . .fr1.fr2_list "unregister"} "7. Удалить регистрацию"  }
+set list_but {{presbut 1;reqToCloud . .fr1.fr2_list "register";} "1. Регистрация в облаке" {presbut 2;reqToCloud . .fr1.fr2_list "change_pswd";} "2. Изменить пароль" \
+{presbut 3;reqToCloud .topPinPw .fr1.fr2_list "duplicate"} "3. Дублировать токен" {presbut 4;cloudStatus . .fr1.fr2_list "status"} "4. Статус" \
+{presbut 5;cloudStatus . .fr1.fr2_list "log"} "5. Посмотреть журнал" {presbut 6;cloudStatus . .fr1.fr2_list "recreate"} "6. Пересоздать токен" \
+{presbut 7;cloudStatus . .fr1.fr2_list "unregister"} "7. Удалить регистрацию"  }
 set i 1
 
 option add *Button.highlightthickness  4    interactive
