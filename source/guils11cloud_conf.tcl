@@ -55,7 +55,7 @@ ttk::style layout MyBorder.TButton {
         }
     }
 }
-ttk::style layout My.TButton {
+ttk::style layout TButton {
         RoundedButton -sticky nswe -border 1 -children {
           Button.focus -sticky nswe -children {
             Button.padding -sticky nswe -children {
@@ -206,7 +206,8 @@ proc statTok {} {
     return 0
   }
   set yesno "no"
-
+  update
+after 1000
   set err [catch {exec $ls11cloud_config status -p $pass} result]
 
   if {$err} {
@@ -495,7 +496,8 @@ image create photo logoCloud_150x96 -data {
   xOEj97O61GTXnv089OGPiF9YsXvP/wKsmRN6ydbjowAAAABJRU5ErkJggg==
 }
 
-image create photo logoLC -file [file join $myDir "logo_cloud.png"]
+#image create photo logoLC -file [file join $myDir "logo_cloud.png"]
+image create photo logoLC -file [file join $myDir "cloud_token_527x352.png"]
 
 image create photo cloud_32x32 -data {
   iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAACD1JREFUeNqkV1tsnEcV/mb+2+6/6117
@@ -609,9 +611,11 @@ image create photo logoTok -data {
 }
 set ::pbut .fr1.fra82.b1
 proc presbut {i} {
-    .fr1.fra82.b$i configure -bg skyblue
-    $::pbut configure -bg #d9d9d9
-    set ::pbut .fr1.fra82.b$i
+    .fr1.fra82.b$i configure -background skyblue
+    if { ".fr1.fra82.b$i" != $::pbut} {
+	$::pbut configure -background #d9d9d9
+	set ::pbut .fr1.fra82.b$i
+    }
 }
 
 wm iconphoto . cloud_32x32
@@ -672,7 +676,7 @@ ttk::scrollbar .fr1.scx -command ".fr1.fr2_list xview" -orient horizontal
 pack .fr1.ysc -in .fr1 -anchor center -expand 0 -fill y -side right  -padx {0 2} -pady {0 11}
 pack .fr1.scx -in .fr1 -anchor center -expand 0 -fill x -side bottom  -padx {0 0}
 
-label .fr1.labLogo -image logoLC -compound center  -text "ПОДОЖДИТЕ" -fg blue -bg #ffffff
+label .fr1.labLogo -image logoLC -compound center  -text "ПОДОЖДИТЕ" -fg black -font "helvetica 12 bold roman" -bg #ffffff
 pack .fr1.labLogo -in .fr1 -anchor center -expand 0 -fill none -side top -pady 5
 #########
 
@@ -687,9 +691,10 @@ if { $fconf == "0" } {
   .fr1.fra82.b5 configure -state "disabled"
   .fr1.fra82.b6 configure -state "disabled"
   .fr1.fra82.b7 configure -state "disabled"
-  tk_messageBox -title "Статус пользователя в облаке" -icon error -message "Вы не зарегистрированы в облаке PKCS#11" -detail "Необходимо зарегистрироваться в облаке\nи создать облачный токен,\nлибо продублировать существующий токен"
-  pack forget .fr1.labLogo
-  pack .fr1.fr2_list -in .fr1 -anchor center -expand 0 -fill none -side top -pady 0
+  .fr1.labLogo configure -text "Вы не зарегистрированы в облаке PKCS#11\nНеобходимо зарегистрироваться в облаке\nи создать облачный токен,\nлибо продублировать существующий токен"  -fg red
+#  tk_messageBox -title "Статус пользователя в облаке" -icon error -message "Вы не зарегистрированы в облаке PKCS#11" -detail "Необходимо зарегистрироваться в облаке\nи создать облачный токен,\nлибо продублировать существующий токен"
+#  pack forget .fr1.labLogo
+#  pack .fr1.fr2_list -in .fr1 -anchor center -expand 0 -fill none -side top -pady 0
 } else {
   set er 0
   update
@@ -697,8 +702,11 @@ if { $fconf == "0" } {
   .fr1.fr2_list delete 1.0 end
   .fr1.fr2_list insert end $result
   if {$err} {
+      .fr1.labLogo configure -text "Ошибка доступа к облаку.\nПроверьте доступность облака."
+if {0} {
     tk_messageBox -title "Регистрация пользователя в облаке" -icon info \
     -message "Ошибка доступа к облаку\nПроверьте доступность облака"
+}
   } else {
     set cm [string first "Token not licensed" $result]
     if { $cm != -1} {
@@ -706,12 +714,16 @@ if { $fconf == "0" } {
     }
     set cm [string first "CKF_USER_PIN_INITIALIZED" $result]
     if { $cm == -1} {
+      .fr1.labLogo configure -text "Вы зарегистрированы в облаке,\nно требуется инициализация вашего облачного токена."  -fg black
+if {0} {
       tk_messageBox -title "Регистрация пользователя в облаке" -icon info \
       -message "Вы зарегистрированы в облаке\nНо требуется инициализация вашего облачного токена"
+}
       set er -1
       set userpin -1
     }
     if {$er == 0} {
+      .fr1.labLogo configure -text "Вы зарегистрированы в облаке PKCS#11.\nОблачный токен готов к использованию."
       tk_messageBox -title "Статус пользователя в облаке" -icon info -message "Вы зарегистрированы в облаке PKCS#11" -detail "Облачный токен готов к использованию"
     }
   }
@@ -880,17 +892,16 @@ proc reqToCloud {w list type} {
   }
 
   wm state .createTok normal
-  wm state .createTok withdraw
+  raise .createTok 
+  grab .createTok
   while {1} {
-    wm state .createTok normal
-    grab .createTok
     focus .createTok.aut.entLogin
 
     set yespas ""
     vwait yespas
-    grab release .createTok
     #Ввод пароля
     if { $yespas == "no" } {
+      grab release .createTok
       return 0
     }
     set host [.createTok.url.entTok get]
@@ -925,6 +936,7 @@ proc reqToCloud {w list type} {
       tk_messageBox -title "$typemes" -icon error -message "Пароль должен иметь неменее 6 символов\n"
       continue
     }
+    grab release .createTok
     break;
   }
   set yesno "no"
@@ -941,8 +953,9 @@ proc reqToCloud {w list type} {
     return
   }
   set yesno  [tk_messageBox  -icon question  -type yesno  -title "$typemes"  \
-  -message "$typemes\nОперация прошла успешно.\nХотите сохранить пароль?" -detail "$res"]
+  -message "$typemes\nОперация прошла успешно.\nХотите сохранить пароль для доступа к облаку?" -detail "$res"]
 
+  set pasmsg ""
   if {$yesno == "yes"} {
     if {$type == "change_pswd"} {
       set pas1 $pas2
@@ -953,17 +966,22 @@ proc reqToCloud {w list type} {
       tk_messageBox -title "$typemes" -icon error -message "Ошибка доступа к облаку" -detail "$res"
       return
     }
-    tk_messageBox -title "$typemes" -icon info \
-    -message "Пароль сохранен"
+#    tk_messageBox -title "$typemes" -icon info -message "Пароль сохранен"
+    set pasmsg "Ваш пароль для доступа к облаку сохранен.\n"
 
   }
   if {$type == "register"} {
-    tk_messageBox -title "$typemes" -icon info \
-    -message "Вы зарегистрированы в токене\nСледующий шаг будет инициализация облачного токена"
-    initp11
+    set utilp11 "Инициализацию токена можно провести в этой же утилите\n или утилитой cryptoarmpkcs\n или утилитами p11conf/guip11conf"
+    .fr1.labLogo configure -text "Вы зарегистрированы в облаке\nСледующим шагом должна быть инициализация облачного токена\n$utilp11"  -fg black
+     set yesno  [tk_messageBox  -icon question  -type yesno  -title "$typemes"  \
+	-message "Вы зарегистрированы в облаке\nСледующий шаг должна быть инициализация вашего облачного токена" \
+	-detail "Инициализацию токена можно провести в этой же утилите\n или утилитой cryptoarmpkcs\n или утилитами p11conf/guip11conf.\nХотите проинициализировать здесь?"]
+    if {$yesno == "yes"} {
+	initp11
+    }
   } else {
-    tk_messageBox -title "$typemes" -icon info \
-    -message "Вы получили доступ к облаку\nПроверьте статус облачного токена"
+    .fr1.labLogo configure -text "Вы получили доступ к облаку\n$pasmsgПроверьте статус облачного токена"  -fg black
+#    tk_messageBox -title "$typemes" -icon info -message "Вы получили доступ к облаку\nПроверьте статус облачного токена"
   }
   .fr1.fra82.b2 configure -state "normal"
   .fr1.fra82.b4 configure -state "normal"
@@ -1069,9 +1087,10 @@ proc initp11 {} {
     tk_messageBox -title "$typemes" -icon error -message "Ошибка установки PIN-кода" -detail "$res"
     return
   }
+  .fr1.labLogo configure -text "PIN-код пользователя с \nлогином $id для токена\n$nicktok установлен.\nОблачный токен готов к использованию\n"  -fg black
   tk_messageBox -title "$typemes" -icon info -message "PIN-код пользователя с \nлогином $id для токена\n$nicktok установлен.\nОблачный токен готов к использованию\n" \
   -detail "$res\nНикому не передавайте PIN от вашего токена.\n \
-  Для смены PIN-кодов используйте утилиты P11CONF/GUIP11CONF\nССЫЛКА на habr"
+  Для смены PIN-кодов используйте утилиты \ncryptoarmpkcs11 или p11conf/guip11conf"
   return
 
 }
@@ -1129,6 +1148,11 @@ proc cloudStatus {w list type} {
     tk_messageBox -title "Статус пользователя в облаке" -icon error -message "Ошибка доступа к облаку" -detail "$result"
     return
   }
+  if {$type == "status" || $type == "log"} {
+    pack forget .fr1.labLogo
+    pack .fr1.fr2_list -anchor center -expand 0 -fill y -side top -ipady 5
+  }
+
   if {[string compare $type "unregister"] == 0} {
     $list insert end "Ваш облачный токен удален\n" color2
     $list insert end "Ваша регистрация в облаке PKCS#11 удалена\n" color2
