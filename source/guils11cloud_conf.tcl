@@ -496,8 +496,8 @@ image create photo logoCloud_150x96 -data {
   xOEj97O61GTXnv089OGPiF9YsXvP/wKsmRN6ydbjowAAAABJRU5ErkJggg==
 }
 
-#image create photo logoLC -file [file join $myDir "logo_cloud.png"]
-image create photo logoLC -file [file join $myDir "cloud_token_527x352.png"]
+image create photo logoLC -file [file join $myDir "logo_cloud.png"]
+#image create photo logoLC -file [file join $myDir "cloud_token_527x352.png"]
 
 image create photo cloud_32x32 -data {
   iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAACD1JREFUeNqkV1tsnEcV/mb+2+6/6117
