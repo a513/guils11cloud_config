@@ -17,6 +17,10 @@ set ::scrwidthmm [winfo screenmmwidth .]
 set ::scrheightmm [winfo screenmmheight .]
 #Запоминаем сколько пикселей в 1 мм
 set ::px2mm [winfo fpixels . 1m]
+#Запоминаем сколько целых пикселей в 1 мм
+set aa [expr $::px2mm + 0.5]
+set ::intpx2mm [expr {int($aa)}]
+
 puts "$::scrwidth  $::scrwidthmm $::px2mm"
 set ::typetlf 0
 #Проверяем, что это телефон
@@ -40,7 +44,6 @@ image create photo logo_cloud -file [file join $mydir "imageme" "logo_cloud_200x
 image create photo logo_and -file [file join $mydir "imageme" "AndTk_inv_147x173.png"] -format "png -alpha 1.0"
 #Свиток опечатанный
 image create photo svitok -file [file join $mydir "imageme" "blue_svitok.png"] -format "png -alpha 1.0"
-image create photo voda -file [file join $mydir "imageme" "voda_400x800.png"]
 image create photo cloud_100x50 -file [file join $mydir "imageme" "cloud_100x50.png"]
 #Плитка
 #image create photo tileand -file [file join $mydir "imageme" "tile_green_and_32x32.png"] -format "png -alpha 1.0"
@@ -185,12 +188,9 @@ proc exitPKCS {} {
 proc page_titul {fr  logo_manufacturer} {
     global mydir
 #Создаем холст на весь экран
-#    tkp::canvas $fr.can -borderwidth 0 -height [winfo screenheight .] -width [winfo screenwidth .] -relief flat
-#    canvas $fr.can -borderwidth 0 -height [winfo screenheight .] -width [winfo screenwidth .] -relief flat
     canvas $fr.can -borderwidth 0 -height $::scrheight  -width $::scrwidth -relief flat
 #Мостим холст плиткой 
     createtile "$fr.can"  "tileand"
-#    createtile "$fr.can"  "tiletitul"
 
     pack $fr.can  -anchor center -expand 1 -fill both -side top  -padx 0 -pady 0
 #Вычисляем координаты для логотипа производителя
@@ -216,8 +216,6 @@ proc page_titul {fr  logo_manufacturer} {
 	set funcWidthPx [font measure fontTEMP_titul0 "$allfunc"]
 	set dlx [expr {($::scrwidth - $funcWidthPx) / 2}]
 
-#	$fr.can create text [expr $dlx + $::dlx1] [expr {$wexit + $::padly + $::dlx1}] -anchor nw -text "$allfunc" -fill black -font fontTEMP_titul0
-#	$fr.can create text $dlx [expr {$wexit + $::padly}] -anchor nw -text "$allfunc" -fill white -font fontTEMP_titul0 -tag id_text0
 	$fr.can create text [expr $dlx + $::dlx1] [expr {$wexit + $::dlx1}] -anchor nw -text "$allfunc" -fill black -font fontTEMP_titul0
 	$fr.can create text $dlx [expr {$wexit }] -anchor nw -text "$allfunc" -fill white -font fontTEMP_titul0 -tag id_text0
 	update
@@ -232,20 +230,18 @@ proc page_titul {fr  logo_manufacturer} {
 	
 	set dlx [expr {($::scrwidth - $funcWidthPx) / 2}]
 
-#	$fr.can create text [expr $dlx + $::dlx1] [expr {$wexit + $::padly + $::dlx1}] -anchor nw -text "$allfunc" -fill black -font fontTEMP_titul1
-#	$fr.can create text $dlx [expr {$wexit + $::padly}] -anchor nw -text "$allfunc" -fill white -font fontTEMP_titul1 -tag id_text1
 	$fr.can create text [expr $dlx + $::dlx1] [expr {$wexit + $::dlx1}] -anchor nw -text "$allfunc" -fill black -font fontTEMP_titul1
 	$fr.can create text $dlx [expr {$wexit}] -anchor nw -text "$allfunc" -fill white -font fontTEMP_titul1 -tag id_text1
 	update
 	set blogo [$fr.can bbox id_text1]
 	set wexit [lindex $blogo 3]
 	set font_titul "-family {$::ftxt} -size 12"
-    catch {font delete fontTEMP_titul2}
-    eval font create fontTEMP_titul2  $font_titul
+	catch {font delete fontTEMP_titul2}
+	eval font create fontTEMP_titul2  $font_titul
 	set allfunc "Регистрация личного токена PKCS11"
 	set funcWidthPx [font measure fontTEMP_titul2 "$allfunc"]
 	set dlx [expr {($::scrwidth - $funcWidthPx) / 2}]
-    set x1 [expr {int($::px2mm * 2)}]
+	set x1 [expr {int($::px2mm * 2)}]
 	$fr.can create text [expr $dlx + $::dlx1] [expr {$wexit + $x1}] -anchor nw -text "Регистрация личного токена PKCS11\nв облаке LS11CLOUD" -fill black -font fontTEMP_titul2
 	$fr.can create text $dlx [expr {$wexit + $x1}] -anchor nw -text "Регистрация личного токена PKCS11\nв облаке LS11CLOUD" -fill white -font fontTEMP_titul2 -tag id_text2
 
@@ -265,7 +261,6 @@ proc page_titul {fr  logo_manufacturer} {
 #Размеры logo_and
     set ha [image height logo_and]
     set wa [image width logo_and]
-#    set wland [expr {$::scrheight - $ha }]
     set hy1 [expr $ha / 4]
 set widthrect [expr $ha / 4]
     set hy2 [expr $hy1 / 4]
@@ -274,18 +269,12 @@ set widthrect [expr $ha / 4]
     set ha1 [expr {$ha - ($ha / 2 ) }]
     $fr.can create image [expr {$wa - 80 }] [expr {$wland + $ha1}] -image svitok -anchor nw -tag tag_land
 
-#	set x1 [expr {int($::px2mm * 5)}]
 	set x1 $dlx
 	set y1 [expr {$wland + $hy2}]
 	set x2 [expr {$::scrwidth - $x1}]
-#	set widthrect [expr {int($::px2mm * 8)}]
 	set y2 [expr {$y1 + $widthrect}]
 	set  wd $::px2mm
-#    set g5 [$fr.can gradient create linear -stops {{0 lightgreen} {1 green}}] 
-#    set S3 [$fr.can style create -stroke "skyblue" -fill  $g5 -strokewidth $wd  -fillopacity 0.6]
-#    set im1 [$fr.can create prect $x1 $y1 $x2 $y2 -rx $rr -style $S3]
     set im1 [create_rectangle $fr.can "but1" $x1 $y1 $x2 $y2 "green" 0.5 [expr int($wd)] "skyblue"]
-#    set im1 [create_rectangle $fr.can "but1" $x1 $y1 $x2 $y2 "#2b972d" 0.6 [expr int($wd)] "skyblue"]
     $fr.can bind $im1 <ButtonPress-1> {butImg "img1"}
 #Печатаем техт
     set blogo [$fr.can bbox $im1]
@@ -295,7 +284,6 @@ set widthrect [expr $ha / 4]
     set bx2 [lindex $blogo 2]
     set bx1 [lindex $blogo 0]
     set bbx [expr {($bx2 - $bx1) / 2}]
-#    set txt1 [$fr.can create text [expr {$x1 + $::padlx * 2}] [expr {$y1 + 1 }] -anchor nw -text "Сайт разработчика" -fill black -font {{Arial} 10 normal}] 
     set txt0 [$fr.can create text [expr {$x1 + $::padlx * 2}] [expr {$y1 + 1 }] -anchor nw -text {Сайт разработчика} -fill black -font fontTEMP_titul2]
     set txt1 [$fr.can create text [expr {$x1 + $::padlx * 2}] [expr {$y1 + 1 }] -anchor nw -text {Сайт разработчика} -fill white -font fontTEMP_titul2]
 #Центрируем техт
@@ -316,10 +304,8 @@ set widthrect [expr $ha / 4]
     $fr.can move $txt1 $offsx $offsy
     $fr.can bind $txt1 <ButtonPress-1> {butImg "img1"}
 
-#	set y1 [expr {$y2 + int($::px2mm * 2)}]
 	set y1 [expr {$y2 + $hy2}]
 	set y2 [expr {$y1 + $widthrect}]
-#    set im1 [create_rectangle $fr.can "but2" $x1 $y1 $x2 $y2 "#00bfa5" 0.5 $wd "skyblue"]
     set im1 [create_rectangle $fr.can "but2" $x1 $y1 $x2 $y2 "green" 0.5 $wd "skyblue"]
 #Печатаем техт
     set blogo [$fr.can bbox $im1]
@@ -350,11 +336,8 @@ set widthrect [expr $ha / 4]
     $fr.can bind $txt1 <ButtonPress-1> {butImg "but2"}
 ###############
 	set y1 [expr {$y2 + $hy2}]
-#	set y1 [expr {$y2 + int($::px2mm * 2)}]
 	set y2 [expr {$y1 + $widthrect}]
 
-#    set S3 [$fr.can style create -stroke skyblue -fill  $g5 -strokewidth $wd  -fillopacity 0.6]
-#    set im1 [$fr.can create prect $x1 $y1 $x2 $y2 -rx $rr -style $S3]
     set im1 [create_rectangle $fr.can "but3" $x1 $y1 $x2 $y2 "green" 0.5 $wd "skyblue"]
     set blogo [$fr.can bbox $im1]
     $fr.can bind $im1 <ButtonPress-1> {exitPKCS}
@@ -364,7 +347,6 @@ set widthrect [expr $ha / 4]
     set bx2 [lindex $blogo 2]
     set bx1 [lindex $blogo 0]
     set bbx [expr {($bx2 - $bx1) / 2}]
-#    set txt1 [$fr.can create text [expr {$x1 + $::padlx * 2}] [expr {$y1 + 1 }] -anchor nw -text "Конец работы" -fill black  -font {Arial 10 normal}]
     set txt0 [$fr.can create text [expr {$x1 + $::padlx * 2}] [expr {$y1 + 1 }] -anchor nw -text "Конец работы" -fill black  -font fontTEMP_titul2]
     set txt1 [$fr.can create text [expr {$x1 + $::padlx * 2}] [expr {$y1 + 1 }] -anchor nw -text "Конец работы" -fill white  -font fontTEMP_titul2]
     $fr.can bind $txt1 <ButtonPress-1> {exitPKCS}
@@ -392,9 +374,7 @@ set ::scrheight [winfo screenheight .]
 #Считываем размеры экрана в миллиметрах
 set ::scrwidthmm [winfo screenmmwidth .]
 set ::scrheightmm [winfo screenmmheight .]
-#Запоминаем сколько пикселей в 1 мм
-set ::px2mm [winfo fpixels . 1m]
-puts "$::scrwidth  $::scrwidthmm $::px2mm"
+#puts "$::scrwidth  $::scrwidthmm $::px2mm"
 #Проверяем, что это телефон
 
 if {$::scrwidth < $::scrheight} {
@@ -779,7 +759,7 @@ puts "Press key *\n"
 	"Replace this file" {
 puts "REPLACE\n"
     	    exp_send "n"
-	    tk_messageBox -title "Регистрация в облаке" -icon info -message "Вы уже зарегмистрированы в облаке\n"
+	    tk_messageBox -title "Регистрация в облаке" -icon info -message "Вы уже зарегистрированы в облаке\n"
     	    exp_continue;	
 	}
 	"Account duplicated OK" {
@@ -938,9 +918,6 @@ proc func_page2 {w} {
     label $w.aut.labUserPin  -bg wheat -text "Пароль:" -anchor w
     entry $w.aut.entUserPin -background snow -show *
     grid $w.aut.labUserPin $w.aut.entUserPin  -padx 2 -pady 2 -sticky news
-#    label $w.aut.labRepUserPin  -bg wheat -text "Повторите" -anchor w
-#    entry $w.aut.entRepUserPin -background snow -show *
-#    grid $w.aut.labRepUserPin $w.aut.entRepUserPin  -padx 2 -pady 2 -sticky news
 #####################
 #Кнопка регистрации:
     set cmd "ttk::button  $w.butop -command {req2cloud $w \"duplicate\"} -text {Продублировать доступ} "
@@ -1041,11 +1018,9 @@ proc page_func {fr tile titul functions} {
 #parray but
 #Создаем шрифт для кнопок
     if {$::typetlf} {
-#	set feFONT_button "-family {Roboto} -size 9 -weight bold -slant roman"
 	set feFONT_button "-family {Roboto} -size 9  -slant roman"
 	set widl 10
     } else {
-#	set feFONT_button "-family {Arial} -size 12 -weight bold -slant roman"
 	set feFONT_button "-family {Arial} -size 12  -slant roman"
 	set widl 5
     }
@@ -1170,9 +1145,7 @@ proc page_func {fr tile titul functions} {
 	    }
 	} else {
 	    frame .fn$drawerCNT -background white -relief flat -pady 0 -padx 0
-#	    set titul ""
 	    set titul $but($drawerCNT)
-#	    if {$drawerCNT != 1 && $drawerCNT != 2 && $drawerCNT != 3 && $drawerCNT != 4 && $drawerCNT != 5 && $drawerCNT != 6 && $drawerCNT != 7 && $drawerCNT != 9 && $drawerCNT != 10 && $drawerCNT != 11} {}
 	    if {$drawerCNT != 1 &&  $drawerCNT != 2 &&  $drawerCNT != 3 &&  $drawerCNT != 4 } {
 		label .fn$drawerCNT.lab -text $but($drawerCNT) 
 		pack .fn$drawerCNT.lab -side top 
@@ -1183,9 +1156,16 @@ proc page_func {fr tile titul functions} {
 	    set cmd [subst "$cmd"]
 	    eval $cmd 
 	    set but1(0) "Возврат в основное меню"
-	    page_func ".fn$drawerCNT" voda "$titul" "but1"
-#	    page_func ".fn$drawerCNT" newtile "$titul" "but1"
-#	    page_func ".fn$drawerCNT" tileand "$titul" "but1"
+	    frame .fn$drawerCNT.can
+	    set frret .fn$drawerCNT.can
+	    eval "frame $frret.sep -bg #a0a0a0 -height $::intpx2mm -relief groove -bd $::intpx2mm"
+	    eval "label $frret.seplab -text {$titul}  -bg skyblue -font {-family {$::ftxt} -size 12}"
+	    eval "button $frret.sepbut -text {Возврат в основное меню} -bg skyblue -command {butReturn}"
+	    pack $frret.sepbut -side bottom  -expand 1
+	    pack $frret.seplab -side bottom -fill x -expand 1
+	    pack $frret.sep -side bottom  -fill x
+	    pack $frret -side bottom -fill both -expand 1
+
 	}
 
    ## Get ready for the next text line.
@@ -1194,7 +1174,6 @@ proc page_func {fr tile titul functions} {
 	set yLocTextPx [ expr $yLocTextPx + $drawerHeightPx]
     	    set yLineLocPx [ expr (( $drawerCNT ) * $drawerHeightPx + $boxbut)]
 	if {$Ndrawers > 0 && ($drawerCNT  > $Ndrawers) } {
-puts "B"
 #Завершаюшая линия
     		$fr.can create line $xLocTextPx $yLineLocPx \
         	[expr $drawerWidthPx + $xLocTextPx] $yLineLocPx \
@@ -1204,7 +1183,6 @@ puts "B"
 	    set dlx [expr {($::::scrwidth - $wa) / 2}]
 
     $fr.can create image $dlx $yLineLocPx -image cloud_100x50 -anchor nw -tag tag_land
-#    $fr.can create image $xLocTextPx [expr $yLineLocPx + $widl] -image cloud_100x50 -anchor nw -tag tag_land
 	}
     }
 }
@@ -1235,19 +1213,10 @@ ttk::frame .fr$i -pad 0 -padding 0
     set but(6) "Пересоздать токен" 
     set but(7) "Удалить регистрацию" 
     set but(8) "Инициализировать токен"
-#    set but(9) "Об Утилите/Дистрибутивы" 
-#    set but(10) "Подключнение Токенов PKCS#11"
-#    set but(11) "Конфигурировние токена"
-#    set but(12) "Просмотр ASN1-структуры" 
 #parray but
-
-if {$::typetlf} {
-	scaleImage voda 3 2
-}
 
 #Всплывающая информация
 set tinfo "\n\tПодождите!\nИдет проверка облачного токена!\n"
 label .linfo -relief groove -bd 3 -fg blue  -text $tinfo -padx 0 -pady 3 -font "helvetica 8 bold italic" -bg #eff0f1 -justify left -wraplength $::scrwidth
 
-#page_func ".fr$i" voda "Функционал" "but"
 page_func ".fr$i" newtile "Функционал" "but"
