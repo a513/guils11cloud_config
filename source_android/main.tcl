@@ -34,6 +34,11 @@ if {$::scrwidth < $::scrheight} {
 
 global mydir
 set mydir [file dirname [info script]]
+source [file join $mydir breeze.tcl]
+if {!$::typetlf} {
+    ttk::style theme use Breeze
+}
+
 #Грузим картинки
 #Логотип продукта
 image create photo logo_product -file [file join $mydir "imageme" "validcertkey_51x24.png"] 
@@ -962,7 +967,7 @@ proc func_page3 {w} {
   ttk::scrollbar $w.fratext.scy  -command [list $w.fratext.text yview]
   ttk::scrollbar $w.fratext.scx -command [list $w.fratext.text xview] -orient horizontal
   #ttk::scrollbar $w.fratext.xscr -orient horizontal -command [list $w.fratext.text xview]
-  pack $w.fratext.scy -anchor center -expand 0 -fill y -side right
+  pack $w.fratext.scy -anchor center -expand 0 -fill y -side right -pady {0 5mm}
   pack $w.fratext.scx -anchor center -expand 0 -fill x -side bottom
   pack $w.fratext.text -anchor center -expand 1 -fill both -side top -padx 0 -pady {0 0}
     $w.fratext.text configure -background white
